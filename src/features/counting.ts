@@ -12,6 +12,8 @@ export default (client: BotClient) => {
     if (!guild || !guild.channelId || message.channel.id !== guild.channelId)
       return;
 
+    const user = guild.getUser(message.author.id);
+
     if (guild.settings.oneByOne && guild.previousUserId === message.author.id) {
       if (guild.settings.resetOnFail) {
         guild.set(0, "count");
@@ -25,6 +27,7 @@ export default (client: BotClient) => {
           ],
         });
       } else message.delete();
+      user.inc("fails");
       return;
     }
 
@@ -43,6 +46,7 @@ export default (client: BotClient) => {
           ],
         });
       } else message.delete();
+      user.inc("fails");
       return;
     }
 
@@ -53,6 +57,7 @@ export default (client: BotClient) => {
       else {
         message.react("❌");
         guild.set(0, "count");
+        user.inc("fails");
         return void message.channel.send({
           embeds: [
             new DangerEmbed()
@@ -63,9 +68,14 @@ export default (client: BotClient) => {
           ],
         });
       }
-    } else if (nextCount !== messageNumber) return void message.delete();
+    } else if (nextCount !== messageNumber) {
+      message.delete();
+      user.inc("fails");
+      return;
+    }
 
     guild.inc("count");
     guild.set(message.author.id, "previousUserId");
+    user.inc("counts");
   });
 };

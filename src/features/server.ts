@@ -1,5 +1,5 @@
 import { config } from "@/utils/config";
-import { getGuild } from "@/utils/db";
+import { db, getGuild } from "@/utils/db";
 import cors from "cors";
 import express from "express";
 import _ from "lodash";
@@ -70,8 +70,117 @@ export default (client: BotClient) => {
         {
           id,
           name: guild.name,
-          iconURL: guild.iconURL({ size: 4096 }),
+          avatar: guild.iconURL({ size: 4096 }),
           count: data.count,
+        },
+        res,
+        fields
+      )
+    );
+  });
+
+  api.get("/server/:id/user/:userId", (req, res) => {
+    const { id, userId } = req.params;
+    const { fields: rawFields } = req.query;
+    const parsedFields = z
+      .array(z.string())
+      .or(z.string())
+      .optional()
+      .parse(rawFields);
+    const fields = (
+      typeof parsedFields === "object" ? parsedFields.join(",") : parsedFields
+    )?.split(",");
+
+    const guild = client.guilds.cache.get(id);
+    if (!guild)
+      return res.status(404).json({
+        error: {
+          code: 404,
+          message: `Guild with ID '${id}' could not be found.`,
+        },
+      });
+
+    const data = getGuild(id);
+    if (!data || !data.channelId)
+      return res.status(404).json({
+        error: {
+          code: 404,
+          message: `Guild with ID '${id}' does not have the counting system enabled.`,
+        },
+      });
+
+    const user = client.users.cache.get(userId);
+    const userData = data.getUser(userId);
+    if (!user || !userData)
+      return res.status(404).json({
+        error: {
+          code: 404,
+          message: `User with ID '${id}' could not be found.`,
+        },
+      });
+
+    return res.json(
+      filterWithFields(
+        {
+          server: {
+            id,
+            name: guild.name,
+            avatar: guild.iconURL({ size: 4096 }),
+            count: data.count,
+          },
+          user: {
+            id: userId,
+            name: user.displayName,
+            username: user.username,
+            avatar: user.displayAvatarURL({ size: 4096 }),
+          },
+          counts: userData.counts,
+          fails: userData.fails,
+        },
+        res,
+        fields
+      )
+    );
+  });
+
+  api.get("/user/:id", (req, res) => {
+    const { id } = req.params;
+    const { fields: rawFields } = req.query;
+    const parsedFields = z
+      .array(z.string())
+      .or(z.string())
+      .optional()
+      .parse(rawFields);
+    const fields = (
+      typeof parsedFields === "object" ? parsedFields.join(",") : parsedFields
+    )?.split(",");
+
+    const user = client.users.cache.get(id);
+    if (!user)
+      return res.status(404).json({
+        error: {
+          code: 404,
+          message: `User with ID '${id}' could not be found.`,
+        },
+      });
+
+    const guilds = db.guilds
+      .keyArray()
+      .map((key) => ({ id: key, ...db.guilds.get(key) }))
+      .filter((guild) => guild.users?.[id])
+      .map((guild) => guild.users?.[id]!);
+    const counts = guilds.reduce((acc, curr) => acc + curr.counts, 0);
+    const fails = guilds.reduce((acc, curr) => acc + curr.fails, 0);
+
+    return res.json(
+      filterWithFields(
+        {
+          id,
+          name: user.displayName,
+          username: user.username,
+          avatar: user.displayAvatarURL({ size: 4096 }),
+          counts,
+          fails,
         },
         res,
         fields

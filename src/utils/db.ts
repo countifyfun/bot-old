@@ -4,23 +4,35 @@ export interface Guild {
   channelId: string | null;
   count: number;
   previousUserId: string | null;
+  users: Record<string, User>;
   settings: {
     oneByOne: boolean;
     resetOnFail: boolean;
   };
 }
 
+export interface User {
+  counts: number;
+  fails: number;
+}
+
 const defaultGuildOptions: Guild = {
   channelId: null,
   count: 0,
   previousUserId: null,
+  users: {},
   settings: {
     oneByOne: false,
     resetOnFail: false,
   },
 };
 
-const db = {
+const defaultUserOptions: User = {
+  counts: 0,
+  fails: 0,
+};
+
+export const db = {
   guilds: new Enmap<string, Guild>({
     name: "Guild",
     dataDir: "./db/guilds",
@@ -37,6 +49,21 @@ export const getGuild = (id: string) => ({
     if (!path) return db.guilds.math(id, "+", 1);
     else return db.guilds.math(id, "+", 1, path);
   },
+  getUser: (id: string) => ({
+    ...(db.guilds.ensure(
+      id,
+      defaultUserOptions as any,
+      `users.${id}`
+    ) as unknown as User),
+    set<P extends Path<User>, D = GetFieldType<Guild, P>>(val: D, path?: P) {
+      if (!path) return db.guilds.set(id, val as any, `users.${id}`);
+      else return db.guilds.set(id, val, `users.${id}.${path}`);
+    },
+    inc<P extends Path<Matching<User, number>>>(path?: P) {
+      if (!path) return db.guilds.math(id, "+", 1, `users.${id}`);
+      else return db.guilds.math(id, "+", 1, `users.${id}.${path}`);
+    },
+  }),
 });
 
 // type helpers
