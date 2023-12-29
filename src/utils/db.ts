@@ -3,7 +3,7 @@ import { Enmap } from "./enmap";
 export interface Guild {
   channelId: string | null;
   count: number;
-  lastCounter: string | null;
+  previousUserId: string | null;
 }
 
 export const db = {
