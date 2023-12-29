@@ -54,7 +54,7 @@ export default (client: BotClient) => {
     res.json(servers);
   });
 
-  api.get("/server/:id", (req, res) => {
+  api.get("/servers/:id", (req, res) => {
     const { id } = req.params;
     const { fields: rawFields } = req.query;
     const parsedFields = z
@@ -98,7 +98,7 @@ export default (client: BotClient) => {
     );
   });
 
-  api.get("/server/:id/user/:userId", (req, res) => {
+  api.get("/servers/:id/users/:userId", (req, res) => {
     const { id, userId } = req.params;
     const { fields: rawFields } = req.query;
     const parsedFields = z
@@ -162,7 +162,7 @@ export default (client: BotClient) => {
     );
   });
 
-  api.get("/user/:id", (req, res) => {
+  api.get("/users/:id", (req, res) => {
     const { id } = req.params;
     const { fields: rawFields } = req.query;
     const parsedFields = z
