@@ -1,3 +1,4 @@
+import { ColorResolvable } from "discord.js";
 import { existsSync, readFileSync } from "fs";
 import { parse } from "yaml";
 
@@ -23,6 +24,14 @@ const configVariables = z.object({
   }),
 });
 
+interface ConfigVariables extends z.infer<typeof configVariables> {
+  colors: {
+    primary: string & ColorResolvable;
+    success: string & ColorResolvable;
+    danger: string & ColorResolvable;
+  };
+}
+
 const parsed = configVariables.safeParse(loadConfig());
 if (parsed.success === false) {
   console.error(
@@ -32,4 +41,4 @@ if (parsed.success === false) {
   throw new SyntaxError("Invalid configuration");
 }
 
-export const config = parsed.data;
+export const config = parsed.data as ConfigVariables;

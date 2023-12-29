@@ -23,13 +23,13 @@ export class BotClient<Ready extends boolean = boolean> extends Client<Ready> {
 
     // commands
     const commands: ApplicationCommandDataResolvable[] = [];
-    fs.readdirSync(join("../slashCommands")).forEach(async (dir) => {
+    fs.readdirSync(join("../commands")).forEach(async (dir) => {
       const commandFiles = fs
-        .readdirSync(join("../slashCommands", dir))
+        .readdirSync(join("../commands", dir))
         .filter((file) => file.endsWith("js") || file.endsWith("ts"));
 
       for (const file of commandFiles) {
-        const command = require(join("../slashCommands", dir, file))?.default;
+        const command = require(join("../commands", dir, file))?.default;
         if (!command || !command.data || !command.run) return;
 
         commands.push(command.data.toJSON());
@@ -66,12 +66,12 @@ export class BotClient<Ready extends boolean = boolean> extends Client<Ready> {
       });
 
     // features
-    fs.readdirSync(join("../features"))
-      .filter((file) => file.endsWith("js") || file.endsWith("ts"))
-      .forEach(async (file) => {
-        const feature = require(join("../features", file))?.default;
-        if (!feature) return;
-        feature(this);
-      });
+    // fs.readdirSync(join("../features"))
+    //   .filter((file) => file.endsWith("js") || file.endsWith("ts"))
+    //   .forEach(async (file) => {
+    //     const feature = require(join("../features", file))?.default;
+    //     if (!feature) return;
+    //     feature(this);
+    //   });
   }
 }
