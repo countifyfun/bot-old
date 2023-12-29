@@ -1,4 +1,5 @@
 import "./utils/config";
+import "./utils/db";
 import "./utils/env";
 
 import { BotClient } from "./structures/client";
