@@ -35,6 +35,25 @@ function filterWithFields(
 export default (client: BotClient) => {
   const api = express().use(cors());
 
+  api.get("/servers", (_, res) => {
+    const servers = db.guilds
+      .keyArray()
+      .map((key) => {
+        const guild = client.guilds.cache.get(key);
+        if (!guild) return;
+        const data = getGuild(key);
+        return {
+          id: key,
+          name: guild.name,
+          avatar: guild.iconURL({ size: 4096 }),
+          count: data.count,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.count - a.count);
+    res.json(servers);
+  });
+
   api.get("/server/:id", (req, res) => {
     const { id } = req.params;
     const { fields: rawFields } = req.query;
