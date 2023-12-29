@@ -17,6 +17,17 @@ export default new Command({
             .setDescription("Whether one by one should be enabled or not.")
             .setRequired(true)
         )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("reset_on_fail")
+        .setDescription("Reset the count if a user gets the count wrong.")
+        .addBooleanOption((option) =>
+          option
+            .setName("enabled")
+            .setDescription("Whether reset on fail should be enabled or not.")
+            .setRequired(true)
+        )
     ),
   run: ({ client, interaction }) => {
     const guild = getGuild(interaction.guild.id);
@@ -43,6 +54,21 @@ export default new Command({
             embeds: [
               new SuccessEmbed().setDescription(
                 `${enabled ? "Enabled" : "Disabled"} one by one!`
+              ),
+            ],
+            ephemeral: true,
+          });
+        }
+        break;
+      case "reset_on_fail":
+        {
+          const enabled = interaction.options.getBoolean("enabled", true);
+          guild.set(enabled, "settings.resetOnFail");
+
+          interaction.reply({
+            embeds: [
+              new SuccessEmbed().setDescription(
+                `${enabled ? "Enabled" : "Disabled"} reset on fail!`
               ),
             ],
             ephemeral: true,

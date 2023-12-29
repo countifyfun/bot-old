@@ -6,6 +6,7 @@ export interface Guild {
   previousUserId: string | null;
   settings: {
     oneByOne: boolean;
+    resetOnFail: boolean;
   };
 }
 
@@ -14,7 +15,8 @@ const defaultGuildOptions: Guild = {
   count: 0,
   previousUserId: null,
   settings: {
-    oneByOne: true,
+    oneByOne: false,
+    resetOnFail: false,
   },
 };
 
