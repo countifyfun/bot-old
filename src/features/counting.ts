@@ -8,7 +8,8 @@ export default (client: BotClient) => {
     if (message.author.bot || !message.inGuild()) return;
 
     const guild = db.guilds.get(message.guild.id);
-    if (!guild.channelId || message.channel.id !== guild.channelId) return;
+    if (!guild || !guild.channelId || message.channel.id !== guild.channelId)
+      return;
 
     const messageSplit = message.content.split(/[ :\n]+/);
     const messageNumberString = messageSplit[0];
