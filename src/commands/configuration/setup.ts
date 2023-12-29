@@ -32,6 +32,16 @@ export default new Command({
       previousUserId: null,
     });
 
+    if (db.guilds.get(interaction.guild.id, "channelId"))
+      return interaction.reply({
+        embeds: [
+          new DangerEmbed().setDescription(
+            "The counting system is already enabled in this server."
+          ),
+        ],
+        ephemeral: true,
+      });
+
     let channel = interaction.options.getChannel("channel");
     if (!channel)
       channel = await interaction.guild.channels.create({
