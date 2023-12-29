@@ -16,7 +16,7 @@ const loadConfig = () => {
 import { z } from "zod";
 
 const configVariables = z.object({
-  guildId: z.string().optional(),
+  guildId: z.string().nullable(),
   port: z.number().default(3000),
   colors: z.object({
     primary: z.string().startsWith("#"),
@@ -24,6 +24,11 @@ const configVariables = z.object({
     danger: z.string().startsWith("#"),
   }),
 });
+
+type Prettify<T> = {
+  [K in keyof T]: T[K];
+  // eslint-disable-next-line @typescript-eslint/ban-types
+} & {};
 
 interface ConfigVariables extends z.infer<typeof configVariables> {
   colors: {
@@ -42,4 +47,4 @@ if (parsed.success === false) {
   throw new SyntaxError("Invalid configuration");
 }
 
-export const config = parsed.data as ConfigVariables;
+export const config = parsed.data as Prettify<ConfigVariables>;
