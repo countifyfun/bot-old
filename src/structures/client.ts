@@ -66,12 +66,12 @@ export class BotClient<Ready extends boolean = boolean> extends Client<Ready> {
       });
 
     // features
-    // fs.readdirSync(join("../features"))
-    //   .filter((file) => file.endsWith("js") || file.endsWith("ts"))
-    //   .forEach(async (file) => {
-    //     const feature = require(join("../features", file))?.default;
-    //     if (!feature) return;
-    //     feature(this);
-    //   });
+    fs.readdirSync(join("../features"))
+      .filter((file) => file.endsWith("js") || file.endsWith("ts"))
+      .forEach(async (file) => {
+        const feature = require(join("../features", file))?.default;
+        if (!feature) return;
+        feature(this);
+      });
   }
 }
