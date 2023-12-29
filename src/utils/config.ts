@@ -17,6 +17,7 @@ import { z } from "zod";
 
 const configVariables = z.object({
   guildId: z.string().optional(),
+  port: z.number().default(3000),
   colors: z.object({
     primary: z.string().startsWith("#"),
     success: z.string().startsWith("#"),
