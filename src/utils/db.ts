@@ -4,12 +4,18 @@ export interface Guild {
   channelId: string | null;
   count: number;
   previousUserId: string | null;
+  settings: {
+    oneByOne: boolean;
+  };
 }
 
 const defaultGuildOptions: Guild = {
   channelId: null,
   count: 0,
   previousUserId: null,
+  settings: {
+    oneByOne: true,
+  },
 };
 
 const db = {
@@ -21,14 +27,11 @@ const db = {
 
 export const getGuild = (id: string) => ({
   ...db.guilds.ensure(id, defaultGuildOptions),
-  set: <P extends Path<Guild>, D = GetFieldType<Guild, P>>(
-    val: D,
-    path?: P
-  ) => {
+  set<P extends Path<Guild>, D = GetFieldType<Guild, P>>(val: D, path?: P) {
     if (!path) return db.guilds.set(id, val as any);
     else return db.guilds.set(id, val, path);
   },
-  inc: <P extends Path<Matching<Guild, number>>>(path?: P) => {
+  inc<P extends Path<Matching<Guild, number>>>(path?: P) {
     if (!path) return db.guilds.math(id, "+", 1);
     else return db.guilds.math(id, "+", 1, path);
   },

@@ -10,7 +10,7 @@ import {
 export default new Command({
   data: new SlashCommandBuilder()
     .setName("update")
-    .setDescription("Update settings in this server.")
+    .setDescription("Update the counting system in this server.")
     .addSubcommand((subcommand) =>
       subcommand
         .setName("channel")
@@ -50,7 +50,6 @@ export default new Command({
       });
 
     const subcommand = interaction.options.getSubcommand();
-
     switch (subcommand) {
       case "channel":
         {

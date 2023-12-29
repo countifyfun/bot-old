@@ -11,6 +11,9 @@ export default (client: BotClient) => {
     if (!guild || !guild.channelId || message.channel.id !== guild.channelId)
       return;
 
+    if (guild.settings.oneByOne && guild.previousUserId === message.author.id)
+      return void message.delete();
+
     const messageSplit = message.content.split(/[ :\n]+/);
     const messageNumberString = messageSplit[0];
     if (!isNumber(messageNumberString)) return void message.delete();
@@ -18,7 +21,7 @@ export default (client: BotClient) => {
     const messageNumber = parseInt(messageNumberString, 10);
     if (guild.count + 1 !== messageNumber) return void message.delete();
 
-    guild.set(messageNumber, "count");
+    guild.inc("count");
     guild.set(message.author.id, "previousUserId");
   });
 };
