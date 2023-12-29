@@ -49,21 +49,23 @@ export const getGuild = (id: string) => ({
     if (!path) return db.guilds.math(id, "+", 1);
     else return db.guilds.math(id, "+", 1, path);
   },
-  getUser: (id: string) => ({
-    ...(db.guilds.ensure(
-      id,
-      defaultUserOptions as any,
-      `users.${id}`
-    ) as unknown as User),
-    set<P extends Path<User>, D = GetFieldType<Guild, P>>(val: D, path?: P) {
-      if (!path) return db.guilds.set(id, val as any, `users.${id}`);
-      else return db.guilds.set(id, val, `users.${id}.${path}`);
-    },
-    inc<P extends Path<Matching<User, number>>>(path?: P) {
-      if (!path) return db.guilds.math(id, "+", 1, `users.${id}`);
-      else return db.guilds.math(id, "+", 1, `users.${id}.${path}`);
-    },
-  }),
+  getUser(userId: string) {
+    return {
+      ...(db.guilds.ensure(
+        id,
+        defaultUserOptions as any,
+        `users.${userId}`
+      ) as unknown as User),
+      set<P extends Path<User>, D = GetFieldType<Guild, P>>(val: D, path?: P) {
+        if (!path) return db.guilds.set(id, val as any, `users.${userId}`);
+        else return db.guilds.set(id, val, `users.${id}.${path}`);
+      },
+      inc<P extends Path<Matching<User, number>>>(path?: P) {
+        if (!path) return db.guilds.math(id, "+", 1, `users.${userId}`);
+        else return db.guilds.math(id, "+", 1, `users.${userId}.${path}`);
+      },
+    };
+  },
 });
 
 // type helpers
