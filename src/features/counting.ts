@@ -29,7 +29,7 @@ export default (client: BotClient) => {
     }
 
     const messageSplit = message.content.split(/[ :\n]+/);
-    const messageNumberString = messageSplit[0];
+    const messageNumberString = messageSplit[0].split(",").join("");
     if (!isNumber(messageNumberString)) {
       if (guild.settings.resetOnFail) {
         guild.set(0, "count");
