@@ -1,5 +1,5 @@
 import { Command } from "@/structures/command";
-import { db } from "@/utils/db";
+import { getGuild } from "@/utils/db";
 import { DangerEmbed, SuccessEmbed } from "@/utils/embed";
 import {
   ChannelType,
@@ -36,7 +36,8 @@ export default new Command({
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
   run: ({ client, interaction }) => {
-    if (!db.guilds.get(interaction.guild.id))
+    const guild = getGuild(interaction.guild.id);
+    if (!guild || !guild.channelId)
       return interaction.reply({
         embeds: [
           new DangerEmbed().setDescription(
@@ -68,7 +69,7 @@ export default new Command({
               ephemeral: true,
             });
 
-          db.guilds.set(interaction.guild.id, channel.id, "channelId");
+          guild.set(channel.id, "channelId");
 
           interaction.reply({
             embeds: [
@@ -83,7 +84,7 @@ export default new Command({
       case "count":
         {
           const count = interaction.options.getNumber("count", true);
-          db.guilds.set(interaction.guild.id, count, "count");
+          guild.set(count, "count");
 
           interaction.reply({
             embeds: [

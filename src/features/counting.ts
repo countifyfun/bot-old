@@ -1,5 +1,5 @@
 import { BotClient } from "@/structures/client";
-import { db } from "@/utils/db";
+import { getGuild } from "@/utils/db";
 
 const isNumber = (str: string) => /^\d+$/.test(str);
 
@@ -7,7 +7,7 @@ export default (client: BotClient) => {
   client.on("messageCreate", (message) => {
     if (message.author.bot || !message.inGuild()) return;
 
-    const guild = db.guilds.get(message.guild.id);
+    const guild = getGuild(message.guild.id);
     if (!guild || !guild.channelId || message.channel.id !== guild.channelId)
       return;
 
@@ -18,7 +18,7 @@ export default (client: BotClient) => {
     const messageNumber = parseInt(messageNumberString, 10);
     if (guild.count + 1 !== messageNumber) return void message.delete();
 
-    db.guilds.set(message.guild.id, messageNumber, "count");
-    db.guilds.set(message.guild.id, message.author.id, "previousUserId");
+    guild.set(messageNumber, "count");
+    guild.set(message.author.id, "previousUserId");
   });
 };
