@@ -1,0 +1,10 @@
+dist
+.env
+config.yml
+config.yaml
+
+node_modules
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
