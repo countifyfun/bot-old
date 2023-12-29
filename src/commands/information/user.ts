@@ -1,4 +1,5 @@
 import { Command } from "@/structures/command";
+import { cfRatio } from "@/utils/cf-ratio";
 import { getGuild } from "@/utils/db";
 import { DangerEmbed, Embed } from "@/utils/embed";
 import { SlashCommandBuilder } from "discord.js";
@@ -49,11 +50,7 @@ export default new Command({
             },
             {
               name: "C/F Ratio",
-              value:
-                (
-                  (userData.counts / (userData.counts + userData.fails)) *
-                  100
-                ).toFixed(2) + "%",
+              value: cfRatio(userData.counts, userData.fails) + "%",
             }
           ),
       ],
