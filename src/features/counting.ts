@@ -1,4 +1,4 @@
-import { BotClient } from "@/structures/client";
+import type { BotClient } from "@/structures/client";
 import { getGuild } from "@/utils/db";
 import { DangerEmbed } from "@/utils/embed";
 

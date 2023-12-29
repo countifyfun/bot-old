@@ -1,4 +1,4 @@
-import { ColorResolvable } from "discord.js";
+import type { ColorResolvable } from "discord.js";
 import { existsSync, readFileSync } from "fs";
 import { parse } from "yaml";
 

@@ -53,7 +53,7 @@ export default new Command({
     switch (subcommand) {
       case "channel":
         {
-          let channel = interaction.options.getChannel("channel");
+          const channel = interaction.options.getChannel("channel");
           if (
             !channel ||
             !channel.isTextBased() ||

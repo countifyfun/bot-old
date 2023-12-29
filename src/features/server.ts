@@ -4,7 +4,7 @@ import cors from "cors";
 import express from "express";
 import _ from "lodash";
 import { z } from "zod";
-import { BotClient } from "../structures/client";
+import type { BotClient } from "../structures/client";
 
 function filterWithFields(
   info: object,
@@ -168,6 +168,7 @@ export default (client: BotClient) => {
       .keyArray()
       .map((key) => ({ id: key, ...db.guilds.get(key) }))
       .filter((guild) => guild.users?.[id])
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
       .map((guild) => guild.users?.[id]!);
     const counts = guilds.reduce((acc, curr) => acc + curr.counts, 0);
     const fails = guilds.reduce((acc, curr) => acc + curr.fails, 0);
