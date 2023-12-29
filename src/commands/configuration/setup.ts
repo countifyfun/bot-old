@@ -25,7 +25,7 @@ export default new Command({
         .setRequired(false)
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
-  run: async  ({ interaction }) => {
+  run: async ({ interaction }) => {
     db.guilds.ensure(interaction.guild.id, {
       channelId: null,
       count: 0,
@@ -33,10 +33,11 @@ export default new Command({
     });
 
     let channel = interaction.options.getChannel("channel");
-    if(!channel) channel = await interaction.guild.channels.create({
-      name: "counting",
-      type: ChannelType.GuildText,
-    })
+    if (!channel)
+      channel = await interaction.guild.channels.create({
+        name: "counting",
+        type: ChannelType.GuildText,
+      });
     if (
       !channel ||
       !channel.isTextBased() ||
