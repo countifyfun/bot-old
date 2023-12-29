@@ -74,4 +74,26 @@ export class BotClient<Ready extends boolean = boolean> extends Client<Ready> {
         feature(this);
       });
   }
+
+  getSlashCommand(name: string) {
+    if (
+      config.guildId &&
+      typeof config.guildId === "string" &&
+      config.guildId.length
+    ) {
+      const guild = this.guilds.cache.get(config.guildId);
+      if (!guild)
+        throw new SyntaxError(`No guild exists with ID '${config.guildId}'`);
+
+      return guild.commands.cache.find(
+        (command) =>
+          command.applicationId === this.user?.id && command.name === name
+      );
+    } else {
+      return this.application?.commands.cache.find(
+        (command) =>
+          command.applicationId === this.user?.id && command.name === name
+      );
+    }
+  }
 }
