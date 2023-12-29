@@ -16,6 +16,7 @@ export default new Command({
             "The counting system has not been enabled in this server."
           ),
         ],
+        ephemeral: true,
       });
 
     interaction.reply({
