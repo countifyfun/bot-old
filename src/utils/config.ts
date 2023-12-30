@@ -16,8 +16,9 @@ const loadConfig = () => {
 import { z } from "zod";
 
 const configVariables = z.object({
-  guildId: z.string().nullable(),
+  guildId: z.string().nullable().optional(),
   port: z.number().default(3000),
+  domain: z.string().nullable().optional(),
   colors: z.object({
     primary: z.string().startsWith("#"),
     success: z.string().startsWith("#"),

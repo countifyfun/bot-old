@@ -2,7 +2,10 @@ import { config } from "@/utils/config";
 import { db, getGuild } from "@/utils/db";
 import cors from "cors";
 import express from "express";
+import { readFileSync } from "fs";
+import https from "https";
 import _ from "lodash";
+import { env } from "process";
 import { z } from "zod";
 import type { BotClient } from "../structures/client";
 
@@ -211,8 +214,37 @@ export default (client: BotClient) => {
   api.all("*", (_, res) => res.redirect("https://countify.fun"));
 
   client.on("ready", () => {
-    api.listen(config.port, () => {
-      console.log(`Listening on port ${config.port}.`);
-    });
+    if (env.NODE_ENV === "development") {
+      api.listen(config.port, () => {
+        console.log(`HTTP server listening on port ${config.port}.`);
+      });
+    } else {
+      const privateKey = readFileSync(
+        `/etc/letsencrypt/live/${config.domain}/privkey.pem`,
+        "utf8"
+      );
+      const certificate = readFileSync(
+        `/etc/letsencrypt/live/${config.domain}/fullchain.pem`,
+        "utf8"
+      );
+
+      const credentials = {
+        key: privateKey,
+        cert: certificate,
+      };
+
+      const server = https.createServer(credentials, api);
+      server.listen(443, () => {
+        console.log("HTTPS server listening on port 443.");
+      });
+
+      api.use((req, res, next) => {
+        if (req.protocol === "http") {
+          const httpsUrl = `https://${req.headers.host}${req.url}`;
+          return res.redirect(301, httpsUrl);
+        }
+        next();
+      });
+    }
   });
 };

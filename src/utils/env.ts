@@ -3,6 +3,7 @@ import { z } from "zod";
 
 const envVariables = z.object({
   DISCORD_TOKEN: z.string(),
+  NODE_ENV: z.enum(["development", "production"]).default("development"),
 });
 
 const parsed = envVariables.safeParse(process.env);
