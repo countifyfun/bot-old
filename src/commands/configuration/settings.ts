@@ -28,6 +28,19 @@ export default new Command({
             .setDescription("Whether reset on fail should be enabled or not.")
             .setRequired(true)
         )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("unlisted")
+        .setDescription(
+          "Make your server only visible to users who have its ID."
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("enabled")
+            .setDescription("Whether this server should be unlisted.")
+            .setRequired(true)
+        )
     ),
   run: ({ client, interaction }) => {
     const guild = getGuild(interaction.guild.id);
@@ -53,7 +66,7 @@ export default new Command({
           interaction.reply({
             embeds: [
               new SuccessEmbed().setDescription(
-                `${enabled ? "Enabled" : "Disabled"} one by one!`
+                `${enabled ? "Enabled" : "Disabled"} one by one.`
               ),
             ],
             ephemeral: true,
@@ -68,7 +81,22 @@ export default new Command({
           interaction.reply({
             embeds: [
               new SuccessEmbed().setDescription(
-                `${enabled ? "Enabled" : "Disabled"} reset on fail!`
+                `${enabled ? "Enabled" : "Disabled"} reset on fail.`
+              ),
+            ],
+            ephemeral: true,
+          });
+        }
+        break;
+      case "unlisted":
+        {
+          const enabled = interaction.options.getBoolean("enabled", true);
+          guild.set(enabled, "settings.unlisted");
+
+          interaction.reply({
+            embeds: [
+              new SuccessEmbed().setDescription(
+                `This server is now ${enabled ? "unlisted" : "public"}.`
               ),
             ],
             ephemeral: true,

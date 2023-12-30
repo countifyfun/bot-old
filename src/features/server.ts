@@ -45,6 +45,7 @@ export default (client: BotClient) => {
         const guild = client.guilds.cache.get(key);
         if (!guild) return;
         const data = getGuild(key);
+        if (data.settings.unlisted) return;
         return {
           id: key,
           name: guild.name,

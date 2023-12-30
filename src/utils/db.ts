@@ -8,6 +8,7 @@ export interface Guild {
   settings: {
     oneByOne: boolean;
     resetOnFail: boolean;
+    unlisted: boolean;
   };
 }
 
@@ -24,6 +25,7 @@ const defaultGuildOptions: Guild = {
   settings: {
     oneByOne: false,
     resetOnFail: false,
+    unlisted: false,
   },
 };
 
