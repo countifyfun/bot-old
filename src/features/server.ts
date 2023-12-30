@@ -49,7 +49,7 @@ export default (client: BotClient) => {
         return {
           id: key,
           name: guild.name,
-          avatar: guild.iconURL({ size: 4096 }),
+          avatar: guild.iconURL({ size: 4096 })?.replace("webp", "png"),
           count: data.count,
         };
       })
@@ -93,7 +93,7 @@ export default (client: BotClient) => {
         {
           id,
           name: guild.name,
-          avatar: guild.iconURL({ size: 4096 }),
+          avatar: guild.iconURL({ size: 4096 })?.replace("webp", "png"),
           count: data.count,
         },
         res,
@@ -148,14 +148,16 @@ export default (client: BotClient) => {
           server: {
             id,
             name: guild.name,
-            avatar: guild.iconURL({ size: 4096 }),
+            avatar: guild.iconURL({ size: 4096 })?.replace("webp", "png"),
             count: data.count,
           },
           user: {
             id: userId,
             name: user.displayName,
             username: user.username,
-            avatar: user.displayAvatarURL({ size: 4096 }),
+            avatar: user
+              .displayAvatarURL({ size: 4096 })
+              .replace("webp", "png"),
           },
           counts: userData.counts,
           fails: userData.fails,
@@ -202,7 +204,7 @@ export default (client: BotClient) => {
           id,
           name: user.displayName,
           username: user.username,
-          avatar: user.displayAvatarURL({ size: 4096 }),
+          avatar: user.displayAvatarURL({ size: 4096 }).replace("webp", "png"),
           counts,
           fails,
         },
