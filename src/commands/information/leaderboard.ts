@@ -173,7 +173,7 @@ export default new Command({
                         (user, index) =>
                           `**${index + 1}**. ${
                             interaction.guild.members.cache.get(user.id)?.user
-                              .username ?? "A user"
+                              .username ?? `<@${user.id}>`
                           }: ${user.counts.toLocaleString()}`
                       )
                       .join("\n")
@@ -204,7 +204,7 @@ export default new Command({
                         (user, index) =>
                           `**${index + 1}**. ${
                             client.users.cache.get(user.id)?.username ??
-                            "A user"
+                            `<@${user.id}>`
                           }: ${user.counts.toLocaleString()}`
                       )
                       .join("\n")
@@ -248,7 +248,7 @@ export default new Command({
                         (user, index) =>
                           `**${index + 1}**. ${
                             interaction.guild.members.cache.get(user.id)?.user
-                              .username ?? "A user"
+                              .username ?? `<@${user.id}>`
                           }: ${user.fails.toLocaleString()}`
                       )
                       .join("\n")
@@ -279,7 +279,7 @@ export default new Command({
                         (user, index) =>
                           `**${index + 1}**. ${
                             client.users.cache.get(user.id)?.username ??
-                            "A user"
+                            `<@${user.id}>`
                           }: ${user.fails.toLocaleString()}`
                       )
                       .join("\n")
@@ -299,10 +299,6 @@ export default new Command({
           {
             const users = guildUsers.sort(
               (a, b) => cfRatio(b.counts, b.fails) - cfRatio(a.counts, a.fails)
-            );
-            const total = guildUsers.reduce(
-              (acc, curr) => acc + cfRatio(curr.counts, curr.fails),
-              0
             );
 
             if (!users.length)
@@ -328,14 +324,11 @@ export default new Command({
                         (user, index) =>
                           `**${index + 1}**. ${
                             interaction.guild.members.cache.get(user.id)?.user
-                              .username ?? "A user"
+                              .username ?? `<@${user.id}>`
                           }: ${cfRatio(user.counts, user.fails)}%`
                       )
                       .join("\n")
-                  )
-                  .setFooter({
-                    text: `Total: ${total.toLocaleString()}`,
-                  }),
+                  ),
               ],
               ephemeral: true,
             });
@@ -345,10 +338,6 @@ export default new Command({
           {
             const users = allUsers.sort(
               (a, b) => cfRatio(b.counts, b.fails) - cfRatio(a.counts, a.fails)
-            );
-            const total = allUsers.reduce(
-              (acc, curr) => acc + cfRatio(curr.counts, curr.fails),
-              0
             );
 
             interaction.reply({
@@ -364,14 +353,11 @@ export default new Command({
                         (user, index) =>
                           `**${index + 1}**. ${
                             client.users.cache.get(user.id)?.username ??
-                            "A user"
+                            `<@${user.id}>`
                           }: ${cfRatio(user.counts, user.fails)}%`
                       )
                       .join("\n")
-                  )
-                  .setFooter({
-                    text: `Total: ${total.toLocaleString()}`,
-                  }),
+                  ),
               ],
               ephemeral: true,
             });
