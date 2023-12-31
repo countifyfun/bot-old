@@ -86,11 +86,12 @@ export default (client: BotClient) => {
     validateRequest({
       query: z.object({
         sort: z.enum(["counts", "fails", "cf_ratio"]).optional(),
+        page: z.coerce.number().optional(),
       }),
     }),
     async (req, res) => {
       const { id } = req.params;
-      const { sort = "cf_ratio" } = req.query;
+      const { sort = "cf_ratio", page = 1 } = req.query;
 
       const guild = client.guilds.cache.get(id);
       if (!guild)
@@ -137,7 +138,12 @@ export default (client: BotClient) => {
             : cfRatio(b.counts, b.fails) - cfRatio(a.counts, a.fails)
       );
 
-      res.json(users.slice(0, 10));
+      const pageSize = 10;
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = page * pageSize;
+      const totalPages = Math.ceil(users.length / pageSize);
+
+      res.json({ users: users.slice(startIndex, endIndex), totalPages });
     }
   );
 
