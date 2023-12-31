@@ -15,7 +15,7 @@ export default new Command({
           option
             .setName("enabled")
             .setDescription("Whether one by one should be enabled or not.")
-            .setRequired(true)
+            .setRequired(false)
         )
     )
     .addSubcommand((subcommand) =>
@@ -26,7 +26,7 @@ export default new Command({
           option
             .setName("enabled")
             .setDescription("Whether reset on fail should be enabled or not.")
-            .setRequired(true)
+            .setRequired(false)
         )
     )
     .addSubcommand((subcommand) =>
@@ -39,7 +39,7 @@ export default new Command({
           option
             .setName("enabled")
             .setDescription("Whether this server should be unlisted.")
-            .setRequired(true)
+            .setRequired(false)
         )
     ),
   run: ({ client, interaction }) => {
@@ -60,7 +60,9 @@ export default new Command({
     switch (subcommand) {
       case "one_by_one":
         {
-          const enabled = interaction.options.getBoolean("enabled", true);
+          const enabled =
+            interaction.options.getBoolean("enabled") ??
+            !guild.settings.oneByOne;
           guild.set(enabled, "settings.oneByOne");
 
           interaction.reply({
@@ -75,7 +77,9 @@ export default new Command({
         break;
       case "reset_on_fail":
         {
-          const enabled = interaction.options.getBoolean("enabled", true);
+          const enabled =
+            interaction.options.getBoolean("enabled") ??
+            !guild.settings.resetOnFail;
           guild.set(enabled, "settings.resetOnFail");
 
           interaction.reply({
@@ -90,7 +94,9 @@ export default new Command({
         break;
       case "unlisted":
         {
-          const enabled = interaction.options.getBoolean("enabled", true);
+          const enabled =
+            interaction.options.getBoolean("enabled") ??
+            !guild.settings.unlisted;
           guild.set(enabled, "settings.unlisted");
 
           interaction.reply({
