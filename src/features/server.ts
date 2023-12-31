@@ -1,6 +1,8 @@
 import { config } from "@/utils/config";
+import type { User } from "@/utils/db";
 import { db, getGuild } from "@/utils/db";
 import cors from "cors";
+import type { GuildMember } from "discord.js";
 import express from "express";
 import { readFileSync } from "fs";
 import https from "https";
@@ -88,6 +90,13 @@ export default (client: BotClient) => {
         },
       });
 
+    let previousUser: GuildMember | undefined,
+      previousUserData: User | undefined;
+    if (data.previousUserId) {
+      previousUser = guild.members.cache.get(data.previousUserId);
+      previousUserData = data.getUser(data.previousUserId);
+    }
+
     return res.json(
       filterWithFields(
         {
@@ -95,6 +104,16 @@ export default (client: BotClient) => {
           name: guild.name,
           avatar: guild.iconURL({ size: 4096 })?.replace("webp", "png"),
           count: data.count,
+          previousUser: {
+            id: data.previousUserId,
+            name: previousUser?.displayName,
+            username: previousUser?.user.username,
+            avatar: previousUser
+              ?.displayAvatarURL({ size: 4096 })
+              .replace("webp", "png"),
+            counts: previousUserData?.counts,
+            fails: previousUserData?.fails,
+          },
         },
         res,
         fields
@@ -132,7 +151,7 @@ export default (client: BotClient) => {
         },
       });
 
-    const user = client.users.cache.get(userId);
+    const user = guild.members.cache.get(userId);
     const userData = data.getUser(userId);
     if (!user || !userData)
       return res.status(404).json({
@@ -154,7 +173,7 @@ export default (client: BotClient) => {
           user: {
             id: userId,
             name: user.displayName,
-            username: user.username,
+            username: user.user.username,
             avatar: user
               .displayAvatarURL({ size: 4096 })
               .replace("webp", "png"),
