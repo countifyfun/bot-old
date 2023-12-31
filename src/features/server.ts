@@ -9,6 +9,7 @@ import { readFileSync } from "fs";
 import https from "https";
 import { env } from "process";
 import { z } from "zod";
+import { validateRequest } from "zod-express-middleware";
 import type { BotClient } from "../structures/client";
 
 export default (client: BotClient) => {
@@ -80,65 +81,65 @@ export default (client: BotClient) => {
     });
   });
 
-  api.get("/servers/:id/users", async (req, res) => {
-    const { id } = req.params;
-    const { sort: rawSort } = req.query;
-    const parsedSort = z
-      .array(z.enum(["counts", "fails", "cf_ratio"]))
-      .or(z.enum(["counts", "fails", "cf_ratio"]))
-      .optional()
-      .parse(rawSort);
-    const sort =
-      (typeof parsedSort === "object" ? parsedSort[0] : parsedSort) ??
-      "cf_ratio";
+  api.get(
+    "/servers/:id/users",
+    validateRequest({
+      query: z.object({
+        sort: z.enum(["counts", "fails", "cf_ratio"]).optional(),
+      }),
+    }),
+    async (req, res) => {
+      const { id } = req.params;
+      const { sort = "cf_ratio" } = req.query;
 
-    const guild = client.guilds.cache.get(id);
-    if (!guild)
-      return res.status(404).json({
-        error: {
-          code: 404,
-          message: `Guild with ID '${id}' could not be found.`,
-        },
-      });
+      const guild = client.guilds.cache.get(id);
+      if (!guild)
+        return res.status(404).json({
+          error: {
+            code: 404,
+            message: `Guild with ID '${id}' could not be found.`,
+          },
+        });
 
-    const data = getGuild(id);
-    if (!data || !data.channelId)
-      return res.status(404).json({
-        error: {
-          code: 404,
-          message: `Guild with ID '${id}' does not have the counting system enabled.`,
-        },
-      });
+      const data = getGuild(id);
+      if (!data || !data.channelId)
+        return res.status(404).json({
+          error: {
+            code: 404,
+            message: `Guild with ID '${id}' does not have the counting system enabled.`,
+          },
+        });
 
-    const users = (
-      await Promise.all(
-        Object.keys(data.users).map(async (key) => {
-          const user =
-            guild.members.cache.get(key) ?? (await guild.members.fetch(key));
-          const userData = data.getUser(key);
+      const users = (
+        await Promise.all(
+          Object.keys(data.users).map(async (key) => {
+            const user =
+              guild.members.cache.get(key) ?? (await guild.members.fetch(key));
+            const userData = data.getUser(key);
 
-          return {
-            id: key,
-            name: user?.displayName,
-            username: user?.user.username,
-            avatar: user
-              ?.displayAvatarURL({ size: 4096 })
-              .replace("webp", "png"),
-            counts: userData.counts,
-            fails: userData.fails,
-          };
-        })
-      )
-    ).sort((a, b) =>
-      sort === "counts"
-        ? b.counts - a.counts
-        : sort === "fails"
-          ? b.fails - a.fails
-          : cfRatio(b.counts, b.fails) - cfRatio(a.counts, a.fails)
-    );
+            return {
+              id: key,
+              name: user?.displayName,
+              username: user?.user.username,
+              avatar: user
+                ?.displayAvatarURL({ size: 4096 })
+                .replace("webp", "png"),
+              counts: userData.counts,
+              fails: userData.fails,
+            };
+          })
+        )
+      ).sort((a, b) =>
+        sort === "counts"
+          ? b.counts - a.counts
+          : sort === "fails"
+            ? b.fails - a.fails
+            : cfRatio(b.counts, b.fails) - cfRatio(a.counts, a.fails)
+      );
 
-    res.json(users.slice(0, 10));
-  });
+      res.json(users.slice(0, 10));
+    }
+  );
 
   api.get("/servers/:id/users/:userId", (req, res) => {
     const { id, userId } = req.params;
