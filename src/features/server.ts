@@ -7,36 +7,9 @@ import type { GuildMember } from "discord.js";
 import express from "express";
 import { readFileSync } from "fs";
 import https from "https";
-import _ from "lodash";
 import { env } from "process";
 import { z } from "zod";
 import type { BotClient } from "../structures/client";
-
-function filterWithFields(
-  info: object,
-  res: express.Response,
-  fields: string[] | undefined
-) {
-  let newInfo;
-
-  if (fields) {
-    for (const field of fields) {
-      if (!_.get(info, field)) {
-        res.status(422);
-        return {
-          error: {
-            code: 422,
-            message: `Invalid field '${field}'.`,
-          },
-        };
-      }
-    }
-
-    newInfo = _.pick(info, fields);
-  } else newInfo = info;
-
-  return newInfo;
-}
 
 export default (client: BotClient) => {
   const api = express().use(cors());
@@ -63,15 +36,6 @@ export default (client: BotClient) => {
 
   api.get("/servers/:id", (req, res) => {
     const { id } = req.params;
-    const { fields: rawFields } = req.query;
-    const parsedFields = z
-      .array(z.string())
-      .or(z.string())
-      .optional()
-      .parse(rawFields);
-    const fields = (
-      typeof parsedFields === "object" ? parsedFields.join(",") : parsedFields
-    )?.split(",");
 
     const guild = client.guilds.cache.get(id);
     if (!guild)
@@ -98,28 +62,22 @@ export default (client: BotClient) => {
       previousUserData = data.getUser(data.previousUserId);
     }
 
-    return res.json(
-      filterWithFields(
-        {
-          id,
-          name: guild.name,
-          avatar: guild.iconURL({ size: 4096 })?.replace("webp", "png"),
-          count: data.count,
-          previousUser: {
-            id: data.previousUserId,
-            name: previousUser?.displayName,
-            username: previousUser?.user.username,
-            avatar: previousUser
-              ?.displayAvatarURL({ size: 4096 })
-              .replace("webp", "png"),
-            counts: previousUserData?.counts,
-            fails: previousUserData?.fails,
-          },
-        },
-        res,
-        fields
-      )
-    );
+    return res.json({
+      id,
+      name: guild.name,
+      avatar: guild.iconURL({ size: 4096 })?.replace("webp", "png"),
+      count: data.count,
+      previousUser: {
+        id: data.previousUserId,
+        name: previousUser?.displayName,
+        username: previousUser?.user.username,
+        avatar: previousUser
+          ?.displayAvatarURL({ size: 4096 })
+          .replace("webp", "png"),
+        counts: previousUserData?.counts,
+        fails: previousUserData?.fails,
+      },
+    });
   });
 
   api.get("/servers/:id/users", async (req, res) => {
@@ -184,15 +142,6 @@ export default (client: BotClient) => {
 
   api.get("/servers/:id/users/:userId", (req, res) => {
     const { id, userId } = req.params;
-    const { fields: rawFields } = req.query;
-    const parsedFields = z
-      .array(z.string())
-      .or(z.string())
-      .optional()
-      .parse(rawFields);
-    const fields = (
-      typeof parsedFields === "object" ? parsedFields.join(",") : parsedFields
-    )?.split(",");
 
     const guild = client.guilds.cache.get(id);
     if (!guild)
@@ -222,43 +171,26 @@ export default (client: BotClient) => {
         },
       });
 
-    return res.json(
-      filterWithFields(
-        {
-          server: {
-            id,
-            name: guild.name,
-            avatar: guild.iconURL({ size: 4096 })?.replace("webp", "png"),
-            count: data.count,
-          },
-          user: {
-            id: userId,
-            name: user.displayName,
-            username: user.user.username,
-            avatar: user
-              .displayAvatarURL({ size: 4096 })
-              .replace("webp", "png"),
-          },
-          counts: userData.counts,
-          fails: userData.fails,
-        },
-        res,
-        fields
-      )
-    );
+    return res.json({
+      server: {
+        id,
+        name: guild.name,
+        avatar: guild.iconURL({ size: 4096 })?.replace("webp", "png"),
+        count: data.count,
+      },
+      user: {
+        id: userId,
+        name: user.displayName,
+        username: user.user.username,
+        avatar: user.displayAvatarURL({ size: 4096 }).replace("webp", "png"),
+      },
+      counts: userData.counts,
+      fails: userData.fails,
+    });
   });
 
   api.get("/users/:id", (req, res) => {
     const { id } = req.params;
-    const { fields: rawFields } = req.query;
-    const parsedFields = z
-      .array(z.string())
-      .or(z.string())
-      .optional()
-      .parse(rawFields);
-    const fields = (
-      typeof parsedFields === "object" ? parsedFields.join(",") : parsedFields
-    )?.split(",");
 
     const user = client.users.cache.get(id);
     if (!user)
@@ -278,20 +210,14 @@ export default (client: BotClient) => {
     const counts = guilds.reduce((acc, curr) => acc + curr.counts, 0);
     const fails = guilds.reduce((acc, curr) => acc + curr.fails, 0);
 
-    return res.json(
-      filterWithFields(
-        {
-          id,
-          name: user.displayName,
-          username: user.username,
-          avatar: user.displayAvatarURL({ size: 4096 }).replace("webp", "png"),
-          counts,
-          fails,
-        },
-        res,
-        fields
-      )
-    );
+    return res.json({
+      id,
+      name: user.displayName,
+      username: user.username,
+      avatar: user.displayAvatarURL({ size: 4096 }).replace("webp", "png"),
+      counts,
+      fails,
+    });
   });
 
   api.all("*", (_, res) => res.redirect("https://countify.fun"));
