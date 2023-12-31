@@ -1,3 +1,4 @@
+import { cfRatio } from "@/utils/cf-ratio";
 import { config } from "@/utils/config";
 import type { User } from "@/utils/db";
 import { db, getGuild } from "@/utils/db";
@@ -119,6 +120,66 @@ export default (client: BotClient) => {
         fields
       )
     );
+  });
+
+  api.get("/servers/:id/users", async (req, res) => {
+    const { id } = req.params;
+    const { sort: rawSort } = req.query;
+    const parsedSort = z
+      .array(z.enum(["counts", "fails", "cf_ratio"]))
+      .or(z.enum(["counts", "fails", "cf_ratio"]))
+      .optional()
+      .parse(rawSort);
+    const sort =
+      (typeof parsedSort === "object" ? parsedSort[0] : parsedSort) ??
+      "cf_ratio";
+
+    const guild = client.guilds.cache.get(id);
+    if (!guild)
+      return res.status(404).json({
+        error: {
+          code: 404,
+          message: `Guild with ID '${id}' could not be found.`,
+        },
+      });
+
+    const data = getGuild(id);
+    if (!data || !data.channelId)
+      return res.status(404).json({
+        error: {
+          code: 404,
+          message: `Guild with ID '${id}' does not have the counting system enabled.`,
+        },
+      });
+
+    const users = (
+      await Promise.all(
+        Object.keys(data.users).map(async (key) => {
+          const user =
+            guild.members.cache.get(key) ?? (await guild.members.fetch(key));
+          const userData = data.getUser(key);
+
+          return {
+            id: key,
+            name: user?.displayName,
+            username: user?.user.username,
+            avatar: user
+              ?.displayAvatarURL({ size: 4096 })
+              .replace("webp", "png"),
+            counts: userData.counts,
+            fails: userData.fails,
+          };
+        })
+      )
+    ).sort((a, b) =>
+      sort === "counts"
+        ? b.counts - a.counts
+        : sort === "fails"
+          ? b.fails - a.fails
+          : cfRatio(b.counts, b.fails) - cfRatio(a.counts, a.fails)
+    );
+
+    res.json(users.slice(0, 10));
   });
 
   api.get("/servers/:id/users/:userId", (req, res) => {
