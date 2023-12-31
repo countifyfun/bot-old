@@ -81,6 +81,10 @@ export default (client: BotClient) => {
     });
   });
 
+  api.get("/server/:id", (req, res) =>
+    res.redirect(`/servers/${req.params.id}`)
+  );
+
   api.get(
     "/servers/:id/users",
     validateRequest({
