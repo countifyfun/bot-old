@@ -5,7 +5,6 @@ import { CronJob } from "cron";
 export default (client: BotClient) => {
   client.on("ready", () => {
     if (env.BETTERUPTIME_URL) {
-      console.log("betteruptime");
       new CronJob(
         "* * * * *",
         async () => {
