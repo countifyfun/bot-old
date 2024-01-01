@@ -6,9 +6,15 @@ export default (client: BotClient) => {
   client.on("ready", () => {
     if (env.BETTERUPTIME_URL) {
       console.log("betteruptime");
-      new CronJob("* * * * *", async () => {
-        await fetch(env.BETTERUPTIME_URL!);
-      });
+      new CronJob(
+        "* * * * *",
+        async () => {
+          await fetch(env.BETTERUPTIME_URL!);
+        },
+        null,
+        true,
+        "America/Los_Angeles"
+      );
     }
   });
 };
