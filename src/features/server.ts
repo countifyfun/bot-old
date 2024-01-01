@@ -15,14 +15,9 @@ import type { BotClient } from "../structures/client";
 export default (client: BotClient) => {
   const api = express().use(cors());
 
-  api.get("/", (req, res) => {
-    if (req.headers["user-agent"] === "Uptimeflare")
-      return res.json({
-        hello: "world",
-      });
-
-    res.redirect("https://docs.countify.fun/api-reference");
-  });
+  api.get("/", (_, res) =>
+    res.redirect("https://docs.countify.fun/api-reference")
+  );
 
   api.get("/servers", (_, res) => {
     const servers = db.guilds
