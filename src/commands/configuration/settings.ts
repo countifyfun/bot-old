@@ -44,6 +44,21 @@ export default new Command({
     )
     .addSubcommand((subcommand) =>
       subcommand
+        .setName("pin_milestones")
+        .setDescription(
+          "Pin a message every time a new milestone is reached. (10, 20, 30, 40, 50, etc.)"
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("enabled")
+            .setDescription(
+              "Whether milestone pinning should be enabled or not."
+            )
+            .setRequired(false)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
         .setName("unlisted")
         .setDescription(
           "Make your server only visible to users who have its ID."
@@ -116,6 +131,23 @@ export default new Command({
             embeds: [
               new SuccessEmbed().setDescription(
                 `${enabled ? "Enabled" : "Disabled"} no deletion.`
+              ),
+            ],
+            ephemeral: true,
+          });
+        }
+        break;
+      case "pin_milestones":
+        {
+          const enabled =
+            interaction.options.getBoolean("enabled") ??
+            !guild.settings.pinMilestones;
+          guild.set(enabled, "settings.pinMilestones");
+
+          interaction.reply({
+            embeds: [
+              new SuccessEmbed().setDescription(
+                `${enabled ? "Enabled" : "Disabled"} milestone pinning.`
               ),
             ],
             ephemeral: true,

@@ -5,7 +5,7 @@ import { DangerEmbed } from "@/utils/embed";
 const isNumber = (str: string) => /^\d+$/.test(str);
 
 export default (client: BotClient) => {
-  client.on("messageCreate", (message) => {
+  client.on("messageCreate", async (message) => {
     if (message.author.bot || !message.inGuild()) return;
 
     const guild = getGuild(message.guild.id);
@@ -78,6 +78,12 @@ export default (client: BotClient) => {
     guild.set(message.author.id, "previousUserId");
     guild.set(message.id, "previousMessageId");
     user.inc("counts");
+
+    if (guild.settings.pinMilestones && messageNumber % 10 === 0) {
+      const pins = await message.channel.messages.fetchPinned();
+      if (pins.size >= 50) await pins.first()?.unpin();
+      message.pin();
+    }
   });
 
   client.on("messageDelete", async (message) => {
@@ -101,5 +107,6 @@ export default (client: BotClient) => {
       content: `${message.author}: ${messageNumberString}`,
     });
     guild.set(newMessage.id, "previousMessageId");
+    if (message.pinned) newMessage.pin();
   });
 };
