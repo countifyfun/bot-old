@@ -10,7 +10,7 @@ import {
 export default new Command({
   data: new SlashCommandBuilder()
     .setName("setup")
-    .setDescription("Setup Countify for this server.")
+    .setDescription("Setup the counting system for this server.")
     .addChannelOption((option) =>
       option
         .setName("channel")
