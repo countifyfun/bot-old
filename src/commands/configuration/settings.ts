@@ -59,15 +59,17 @@ export default new Command({
     )
     .addSubcommand((subcommand) =>
       subcommand
-        .setName("unlisted")
-        .setDescription(
-          "Make your server only visible to users who have its ID."
-        )
-        .addBooleanOption((option) =>
+        .setName("visibility")
+        .setDescription("Update the visibility for this server.")
+        .addStringOption((option) =>
           option
-            .setName("enabled")
-            .setDescription("Whether this server should be unlisted.")
-            .setRequired(false)
+            .setName("visibility")
+            .setDescription("The visibility for this server.")
+            .addChoices(
+              { name: "Public", value: "public" },
+              { name: "Unlisted", value: "unlisted" }
+            )
+            .setRequired(true)
         )
     ),
   run: ({ client, interaction }) => {
@@ -154,11 +156,12 @@ export default new Command({
           });
         }
         break;
-      case "unlisted":
+      case "visiblity":
         {
           const enabled =
-            interaction.options.getBoolean("enabled") ??
-            !guild.settings.unlisted;
+            interaction.options.getString("visibility", true) === "unlisted"
+              ? true
+              : false;
           guild.set(enabled, "settings.unlisted");
 
           interaction.reply({
