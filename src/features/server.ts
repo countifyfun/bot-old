@@ -15,6 +15,15 @@ import type { BotClient } from "../structures/client";
 export default (client: BotClient) => {
   const api = express().use(cors());
 
+  api.get("/", (req, res) => {
+    if (req.headers["user-agent"] === "Uptimeflare")
+      return res.json({
+        hello: "world",
+      });
+
+    res.redirect("https://docs.countify.fun/api-reference");
+  });
+
   api.get("/servers", (_, res) => {
     const servers = db.guilds
       .keyArray()
@@ -231,7 +240,14 @@ export default (client: BotClient) => {
     });
   });
 
-  api.all("*", (_, res) => res.redirect("https://countify.fun"));
+  api.all("*", (req, res) => {
+    res.status(404).json({
+      error: {
+        code: 404,
+        message: `Route '${req.path}' not found.`,
+      },
+    });
+  });
 
   client.on("ready", () => {
     if (env.NODE_ENV === "development") {
