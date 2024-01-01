@@ -4,10 +4,12 @@ export interface Guild {
   channelId: string | null;
   count: number;
   previousUserId: string | null;
+  previousMessageId: string | null;
   users: Record<string, User>;
   settings: {
     oneByOne: boolean;
     resetOnFail: boolean;
+    noDeletion: boolean;
     unlisted: boolean;
   };
 }
@@ -21,10 +23,12 @@ const defaultGuildOptions: Guild = {
   channelId: null,
   count: 0,
   previousUserId: null,
+  previousMessageId: null,
   users: {},
   settings: {
     oneByOne: false,
     resetOnFail: false,
+    noDeletion: true,
     unlisted: false,
   },
 };

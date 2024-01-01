@@ -31,6 +31,19 @@ export default new Command({
     )
     .addSubcommand((subcommand) =>
       subcommand
+        .setName("no_deletion")
+        .setDescription(
+          "Resend the last count if it gets deleted accidentally."
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("enabled")
+            .setDescription("Whether no deletion should be enabled or not.")
+            .setRequired(false)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
         .setName("unlisted")
         .setDescription(
           "Make your server only visible to users who have its ID."
@@ -86,6 +99,23 @@ export default new Command({
             embeds: [
               new SuccessEmbed().setDescription(
                 `${enabled ? "Enabled" : "Disabled"} reset on fail.`
+              ),
+            ],
+            ephemeral: true,
+          });
+        }
+        break;
+      case "no_deletion":
+        {
+          const enabled =
+            interaction.options.getBoolean("enabled") ??
+            !guild.settings.noDeletion;
+          guild.set(enabled, "settings.noDeletion");
+
+          interaction.reply({
+            embeds: [
+              new SuccessEmbed().setDescription(
+                `${enabled ? "Enabled" : "Disabled"} no deletion.`
               ),
             ],
             ephemeral: true,
