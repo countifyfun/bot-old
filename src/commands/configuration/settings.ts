@@ -31,6 +31,19 @@ export default new Command({
     )
     .addSubcommand((subcommand) =>
       subcommand
+        .setName("talking")
+        .setDescription(
+          "Allow members to talk to each other in the counting channel."
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("enabled")
+            .setDescription("Whether talking should be allowed or not.")
+            .setRequired(false)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
         .setName("no_deletion")
         .setDescription(
           "Resend the last count if it gets deleted accidentally."
@@ -116,6 +129,23 @@ export default new Command({
             embeds: [
               new SuccessEmbed().setDescription(
                 `${enabled ? "Enabled" : "Disabled"} reset on fail.`
+              ),
+            ],
+            ephemeral: true,
+          });
+        }
+        break;
+      case "talking":
+        {
+          const enabled =
+            interaction.options.getBoolean("enabled") ??
+            !guild.settings.talking;
+          guild.set(enabled, "settings.talking");
+
+          interaction.reply({
+            embeds: [
+              new SuccessEmbed().setDescription(
+                `${enabled ? "Enabled" : "Disabled"} talking.`
               ),
             ],
             ephemeral: true,

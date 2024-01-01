@@ -32,6 +32,23 @@ export default (client: BotClient) => {
     }
 
     const messageSplit = message.content.split(/[ :\n]+/);
+    if (!guild.settings.talking && messageSplit.length > 1) {
+      if (guild.settings.resetOnFail) {
+        guild.set(0, "count");
+        message.channel.send({
+          embeds: [
+            new DangerEmbed()
+              .setTitle("❌ Oh no!")
+              .setDescription(
+                `${message.author} talked in their count message. The count has been reset to 0!`
+              ),
+          ],
+        });
+      } else message.delete();
+      user.inc("fails");
+      return;
+    }
+
     const messageNumberString = messageSplit[0].split(",").join("");
     if (!isNumber(messageNumberString)) {
       if (guild.settings.resetOnFail) {
