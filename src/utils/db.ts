@@ -9,6 +9,7 @@ export interface Guild {
   settings: {
     oneByOne: boolean;
     resetOnFail: boolean;
+    talking: boolean;
     noDeletion: boolean;
     pinMilestones: boolean;
     unlisted: boolean;
@@ -29,6 +30,7 @@ const defaultGuildOptions: Guild = {
   settings: {
     oneByOne: false,
     resetOnFail: false,
+    talking: true,
     noDeletion: true,
     pinMilestones: false,
     unlisted: false,
