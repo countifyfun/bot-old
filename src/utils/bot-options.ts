@@ -1,5 +1,5 @@
 import type { ClientOptions } from "discord.js";
-import { ActivityType, GatewayIntentBits } from "discord.js";
+import { ActivityType, GatewayIntentBits, Partials } from "discord.js";
 
 export const botOptions: ClientOptions = {
   intents: [
@@ -15,6 +15,15 @@ export const botOptions: ClientOptions = {
       },
     ],
   },
+  partials: [
+    Partials.Channel,
+    Partials.GuildMember,
+    Partials.GuildScheduledEvent,
+    Partials.Message,
+    Partials.Reaction,
+    Partials.ThreadMember,
+    Partials.User,
+  ],
   allowedMentions: {
     parse: [],
     roles: [],

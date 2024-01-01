@@ -76,6 +76,30 @@ export default (client: BotClient) => {
 
     guild.inc("count");
     guild.set(message.author.id, "previousUserId");
+    guild.set(message.id, "previousMessageId");
     user.inc("counts");
+  });
+
+  client.on("messageDelete", async (message) => {
+    if (message.author?.bot || !message.inGuild()) return;
+
+    const guild = getGuild(message.guild.id);
+    if (
+      !guild ||
+      !guild.channelId ||
+      message.channel.id !== guild.channelId ||
+      !guild.settings.noDeletion ||
+      !guild.previousMessageId ||
+      guild.previousMessageId !== message.id
+    )
+      return;
+
+    const messageSplit = message.content.split(/[ :\n]+/);
+    const messageNumberString = messageSplit[0].split(",").join("");
+
+    const newMessage = await message.channel.send({
+      content: `${message.author}: ${messageNumberString}`,
+    });
+    guild.set(newMessage.id, "previousMessageId");
   });
 };
