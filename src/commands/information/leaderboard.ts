@@ -114,8 +114,12 @@ export default new Command({
       });
 
     if (subcommand === "servers") {
-      const servers = allGuilds.sort((a, b) => b.count - a.count);
-      const total = allGuilds.reduce((acc, curr) => acc + curr.count, 0);
+      const servers = allGuilds
+        .filter((guild) => !guild.settings.unlisted)
+        .sort((a, b) => b.count - a.count);
+      const total = allGuilds
+        .filter((guild) => !guild.settings.unlisted)
+        .reduce((acc, curr) => acc + curr.count, 0);
 
       interaction.reply({
         embeds: [
