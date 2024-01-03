@@ -19,8 +19,6 @@ const configVariables = z.object({
   guildId: z.string().nullable().optional(),
   port: z.number().default(3000),
   domain: z.string().nullable().optional(),
-  url: z.string().url(),
-  redirect: z.string().url(),
   colors: z.object({
     primary: z.string().startsWith("#"),
     success: z.string().startsWith("#"),
