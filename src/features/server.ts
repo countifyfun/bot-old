@@ -2,22 +2,198 @@ import { cfRatio } from "@/utils/cf-ratio";
 import { config } from "@/utils/config";
 import type { User } from "@/utils/db";
 import { db, getGuild } from "@/utils/db";
+import { env } from "@/utils/env";
+import cookieParser from "cookie-parser";
 import cors from "cors";
-import type { GuildMember } from "discord.js";
+import type { CategoryChannel } from "discord.js";
+import {
+  ChannelType,
+  PermissionsBitField,
+  type APIGuild,
+  type GuildMember,
+} from "discord.js";
 import express from "express";
 import { readFileSync } from "fs";
 import https from "https";
-import { env } from "process";
+import { getToken } from "next-auth/jwt";
 import { z } from "zod";
 import { validateRequest } from "zod-express-middleware";
 import type { BotClient } from "../structures/client";
 
 export default (client: BotClient) => {
-  const api = express().use(cors());
+  const api = express().use(cors()).use(cookieParser()).use(express.json());
 
   api.get("/", (_, res) =>
     res.redirect("https://docs.countify.fun/api-reference")
   );
+
+  api.get("/dashboard/servers", async (req, res) => {
+    let authorization = req.headers.authorization;
+    if (!authorization) {
+      const token = await getToken({
+        req,
+      });
+      authorization = token ? `Bearer ${token.access_token}` : undefined;
+    }
+    if (!authorization)
+      return res.status(401).json({
+        error: {
+          code: 401,
+          message: "Unauthorized.",
+        },
+      });
+
+    const discordRes = await fetch(
+      "https://discord.com/api/v10/users/@me/guilds",
+      {
+        headers: {
+          Authorization: authorization,
+        },
+      }
+    );
+    if (discordRes.status === 401)
+      return res.status(401).json({
+        error: {
+          code: 401,
+          message: "Unauthorized.",
+        },
+      });
+
+    const data = (await discordRes.json()) as APIGuild[];
+    const guilds = data
+      .filter((g) =>
+        new PermissionsBitField(g.permissions as unknown as bigint).has(
+          "ManageGuild"
+        )
+      )
+      .sort((a, b) =>
+        client.guilds.cache.get(a.id) && client.guilds.cache.get(b.id)
+          ? 0
+          : client.guilds.cache.get(a.id)
+            ? -1
+            : client.guilds.cache.get(b.id)
+              ? 1
+              : 0
+      )
+      .map((g) => ({ ...g, botInGuild: !!client.guilds.cache.get(g.id) }));
+
+    res.json(guilds);
+  });
+
+  api.get("/dashboard/servers/:id", async (req, res) => {
+    const { id } = req.params;
+
+    let authorization = req.headers.authorization;
+    if (!authorization) {
+      const token = await getToken({
+        req,
+      });
+      authorization = token ? (token.access_token as string) : undefined;
+    }
+    if (!authorization)
+      return res.status(401).json({
+        error: {
+          code: 401,
+          message: "Unauthorized.",
+        },
+      });
+
+    const guild = client.guilds.cache.get(id);
+    if (!guild)
+      return res.status(404).json({
+        error: {
+          code: 404,
+          message: `Guild with ID '${id}' could not be found.`,
+        },
+      });
+
+    const guildData = getGuild(id);
+
+    res.json({
+      id,
+      name: guild.name,
+      avatar: guild.iconURL({ size: 4096 })?.replace("webp", "png"),
+      channels: guild.channels.cache
+        .filter(
+          (channel) =>
+            channel.type === ChannelType.GuildText &&
+            !channel.parentId &&
+            channel
+              .permissionsFor(guild.members.me!)
+              .has(["ViewChannel", "ManageMessages"])
+        )
+        .map((channel) => ({
+          id: channel.id,
+          name: channel.name,
+        })),
+      categories: guild.channels.cache
+        .filter((channel) => channel.type === ChannelType.GuildCategory)
+        .map((category) => ({
+          id: category.id,
+          name: category.name,
+          channels: (category as CategoryChannel).children.cache
+            .filter(
+              (channel) =>
+                channel.type === ChannelType.GuildText &&
+                channel
+                  .permissionsFor(guild.members.me!)
+                  .has(["ViewChannel", "ManageMessages"])
+            )
+            .map((channel) => ({
+              id: channel.id,
+              name: channel.name,
+            })),
+        })),
+      channelId: guildData.channelId,
+      count: guildData.count,
+      settings: guildData.settings,
+    });
+  });
+
+  api.patch("/dashboard/servers/:id", async (req, res) => {
+    const { id } = req.params;
+
+    let authorization = req.headers.authorization;
+    if (!authorization) {
+      const token = await getToken({
+        req,
+      });
+      authorization = token ? (token.access_token as string) : undefined;
+    }
+    if (!authorization)
+      return res.status(401).json({
+        error: {
+          code: 401,
+          message: "Unauthorized.",
+        },
+      });
+
+    if (!client.guilds.cache.get(id))
+      return res.status(404).json({
+        error: {
+          code: 404,
+          message: `Guild with ID '${id}' could not be found.`,
+        },
+      });
+
+    const guildData = getGuild(id);
+    if (req.body.channelId) guildData.set(req.body.channelId, "channelId");
+    if (req.body.count) guildData.set(req.body.count, "count");
+    if (req.body.oneByOne)
+      guildData.set(req.body.oneByOne, "settings.oneByOne");
+    if (req.body.resetOnFail)
+      guildData.set(req.body.resetOnFail, "settings.resetOnFail");
+    if (req.body.noDeletion)
+      guildData.set(req.body.noDeletion, "settings.noDeletion");
+    if (req.body.pinMilestones)
+      guildData.set(req.body.pinMilestones, "settings.pinMilestones");
+    if (req.body.unlisted)
+      guildData.set(req.body.unlisted, "settings.unlisted");
+
+    res.json({
+      success: true,
+    });
+  });
 
   api.get("/servers", (_, res) => {
     const servers = db.guilds
