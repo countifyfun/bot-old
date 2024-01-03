@@ -3,6 +3,7 @@ import { z } from "zod";
 
 const envVariables = z.object({
   DISCORD_TOKEN: z.string(),
+  NEXTAUTH_SECRET: z.string(),
   BETTERUPTIME_URL: z.string().url().optional(),
   NODE_ENV: z.enum(["development", "production"]).default("development"),
 });
