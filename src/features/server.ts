@@ -191,15 +191,15 @@ export default (client: BotClient) => {
     const guildData = getGuild(id);
     if (req.body.channelId) guildData.set(req.body.channelId, "channelId");
     if (req.body.count) guildData.set(req.body.count, "count");
-    if (req.body.oneByOne)
+    if (typeof req.body.oneByOne === "boolean")
       guildData.set(req.body.oneByOne, "settings.oneByOne");
-    if (req.body.resetOnFail)
+    if (typeof req.body.resetOnFail === "boolean")
       guildData.set(req.body.resetOnFail, "settings.resetOnFail");
-    if (req.body.noDeletion)
+    if (typeof req.body.noDeletion === "boolean")
       guildData.set(req.body.noDeletion, "settings.noDeletion");
-    if (req.body.pinMilestones)
+    if (typeof req.body.pinMilestones === "boolean")
       guildData.set(req.body.pinMilestones, "settings.pinMilestones");
-    if (req.body.unlisted)
+    if (typeof req.body.unlisted === "boolean")
       guildData.set(req.body.unlisted, "settings.unlisted");
 
     res.json({
