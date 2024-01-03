@@ -5,7 +5,7 @@ import { db, getGuild } from "@/utils/db";
 import { env } from "@/utils/env";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import type { CategoryChannel } from "discord.js";
+import type { CategoryChannel, TextChannel } from "discord.js";
 import {
   ChannelType,
   PermissionsBitField,
@@ -122,12 +122,19 @@ export default (client: BotClient) => {
               .permissionsFor(guild.members.me!)
               .has(["ViewChannel", "ManageMessages"])
         )
+        .sort(
+          (a, b) => (a as TextChannel).position - (b as TextChannel).position
+        )
         .map((channel) => ({
           id: channel.id,
           name: channel.name,
         })),
       categories: guild.channels.cache
         .filter((channel) => channel.type === ChannelType.GuildCategory)
+        .sort(
+          (a, b) =>
+            (a as CategoryChannel).position - (b as CategoryChannel).position
+        )
         .map((category) => ({
           id: category.id,
           name: category.name,
@@ -138,6 +145,10 @@ export default (client: BotClient) => {
                 channel
                   .permissionsFor(guild.members.me!)
                   .has(["ViewChannel", "ManageMessages"])
+            )
+            .sort(
+              (a, b) =>
+                (a as TextChannel).position - (b as TextChannel).position
             )
             .map((channel) => ({
               id: channel.id,
