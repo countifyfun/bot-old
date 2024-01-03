@@ -143,7 +143,8 @@ export default (client: BotClient) => {
               id: channel.id,
               name: channel.name,
             })),
-        })),
+        }))
+        .filter((category) => category.channels.length),
       channelId: guildData.channelId,
       count: guildData.count,
       settings: guildData.settings,
