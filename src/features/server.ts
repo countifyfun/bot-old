@@ -19,6 +19,8 @@ import { getToken } from "next-auth/jwt";
 import { z } from "zod";
 import { validateRequest } from "zod-express-middleware";
 import type { BotClient } from "../structures/client";
+import { Webhook } from "@top-gg/sdk";
+import { SuccessEmbed } from "@/utils/embed";
 
 export default (client: BotClient) => {
   const api = express().use(cors()).use(cookieParser()).use(express.json());
@@ -422,6 +424,30 @@ export default (client: BotClient) => {
       fails,
     });
   });
+
+  const webhook = new Webhook(env.TOPGG_AUTH_SECRET);
+  api.post(
+    "/topgg-webhook",
+    webhook.listener(async (vote) => {
+      const channel = await client.channels.fetch("1194558896833040504");
+      if (!channel || !channel.isTextBased()) return;
+
+      channel.send({
+        embeds: [
+          new SuccessEmbed()
+            .setAuthor({
+              name: client.user!.username,
+              iconURL: client.user!.displayAvatarURL(),
+            })
+            .setTitle("New vote!")
+            .setDescription(
+              `<@${vote.user}> just voted for Countify on **top.gg**!`
+            )
+            .setTimestamp(),
+        ],
+      });
+    })
+  );
 
   api.all("*", (req, res) => {
     res.status(404).json({
