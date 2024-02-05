@@ -21,7 +21,7 @@ export default new Command({
         ephemeral: true,
       });
 
-    guild.set(null, "channelId");
+    guild.delete();
 
     interaction.reply({
       embeds: [
