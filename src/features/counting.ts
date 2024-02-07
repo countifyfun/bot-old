@@ -22,59 +22,64 @@ export default (client: BotClient) => {
       })
       .filter(Boolean);
     for (const server of servers) {
-      if (!server.channelId || !server.previousMessageId) continue;
+      try {
+        if (!server.channelId || !server.previousMessageId) continue;
 
-      const guild = client.guilds.cache.get(server.id);
-      if (!guild) continue;
+        const guild = client.guilds.cache.get(server.id);
+        if (!guild) continue;
 
-      const channel = guild.channels.cache.get(server.channelId);
-      if (!channel || !channel.isTextBased()) continue;
+        const channel = guild.channels.cache.get(server.channelId);
+        if (!channel || !channel.isTextBased()) continue;
 
-      let checkedMessages = 0;
-      let lastCheckedMessageId = undefined;
-      let finished = false;
-      let failed = false;
+        let checkedMessages = 0;
+        let lastCheckedMessageId = undefined;
+        let finished = false;
+        let failed = false;
 
-      while (checkedMessages < 100 || !finished) {
-        const message: Message<true> | undefined = await channel.messages
-          .fetch({ limit: 1, before: lastCheckedMessageId })
-          .then((messages) => messages.at(0));
-        if (!message) {
-          failed = true;
-          break;
-        }
+        while (checkedMessages < 100 || !finished) {
+          const message: Message<true> | undefined = await channel.messages
+            .fetch({ limit: 1, before: lastCheckedMessageId })
+            .then((messages) => messages.at(0));
+          if (!message) {
+            failed = true;
+            break;
+          }
 
-        const messageSplit = message.content.split(/[ :\n]+/);
-        const messageNumberString = messageSplit[0].split(",").join("");
-        if (!isNumber(messageNumberString)) {
-          lastCheckedMessageId = message.id;
-          checkedMessages += 1;
-          continue;
-        }
+          const messageSplit = message.content.split(/[ :\n]+/);
+          const messageNumberString = messageSplit[0].split(",").join("");
+          if (!isNumber(messageNumberString)) {
+            lastCheckedMessageId = message.id;
+            checkedMessages += 1;
+            continue;
+          }
 
-        const messageNumber = parseInt(messageNumberString, 10);
-        if (messageNumber === server.count) {
+          const messageNumber = parseInt(messageNumberString, 10);
+          if (messageNumber === server.count) {
+            finished = true;
+            break;
+          }
+
+          server.set(messageNumber, "count");
           finished = true;
           break;
         }
 
-        server.set(messageNumber, "count");
-        finished = true;
-        break;
+        if (failed || (!finished && checkedMessages > 99))
+          channel.send({
+            embeds: [
+              new DangerEmbed()
+                .setTitle("❌ Oh no!")
+                .setDescription(
+                  `I tried updating this channel's count, but failed. Please ask a staff member to run </update count:${client.getSlashCommand(
+                    "update"
+                  )}> to update the count.`
+                ),
+            ],
+          });
+      } catch (err) {
+        console.error(err);
+        continue;
       }
-
-      if (failed || (!finished && checkedMessages > 99))
-        channel.send({
-          embeds: [
-            new DangerEmbed()
-              .setTitle("❌ Oh no!")
-              .setDescription(
-                `I tried updating this channel's count, but failed. Please ask a staff member to run </update count:${client.getSlashCommand(
-                  "update"
-                )}> to update the count.`
-              ),
-          ],
-        });
     }
   });
 
