@@ -6,6 +6,10 @@ export interface Guild {
   previousUserId: string | null;
   previousMessageId: string | null;
   users: Record<string, User>;
+  history: {
+    time: number;
+    count: number;
+  }[];
   settings: {
     oneByOne: boolean;
     resetOnFail: boolean;
@@ -27,6 +31,7 @@ const defaultGuildOptions: Guild = {
   previousUserId: null,
   previousMessageId: null,
   users: {},
+  history: [],
   settings: {
     oneByOne: false,
     resetOnFail: false,
@@ -58,6 +63,10 @@ export const getGuild = (id: string) => ({
   inc<P extends Path<Matching<Guild, number>>>(path?: P) {
     if (!path) return db.guilds.math(id, "+", 1);
     else return db.guilds.math(id, "+", 1, path);
+  },
+  delete<P extends Path<Guild>>(path?: P) {
+    if (!path) return db.guilds.delete(id);
+    else return db.guilds.delete(id, path);
   },
   getUser(userId: string) {
     return {

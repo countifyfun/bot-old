@@ -275,6 +275,30 @@ export default (client: BotClient) => {
     });
   });
 
+  api.get("/servers/:id/history", (req, res) => {
+    const { id } = req.params;
+
+    const guild = client.guilds.cache.get(id);
+    if (!guild)
+      return res.status(404).json({
+        error: {
+          code: 404,
+          message: `Guild with ID '${id}' could not be found.`,
+        },
+      });
+
+    const data = getGuild(id);
+    if (!data || !data.channelId)
+      return res.status(404).json({
+        error: {
+          code: 404,
+          message: `Guild with ID '${id}' does not have the counting system enabled.`,
+        },
+      });
+
+    return res.json(data.history);
+  });
+
   api.get("/server/:id", (req, res) =>
     res.redirect(`/servers/${req.params.id}`)
   );
