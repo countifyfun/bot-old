@@ -186,7 +186,7 @@ export default new Command({
           });
         }
         break;
-      case "visiblity":
+      case "visibility":
         {
           const enabled =
             interaction.options.getString("visibility", true) === "unlisted"
