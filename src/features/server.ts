@@ -21,9 +21,34 @@ import { validateRequest } from "zod-express-middleware";
 import type { BotClient } from "../structures/client";
 import { Webhook } from "@top-gg/sdk";
 import { SuccessEmbed } from "@/utils/embed";
+import swaggerJsDoc, { type SwaggerDefinition } from "swagger-jsdoc";
+
+const swaggerDefinition: SwaggerDefinition = {
+  openapi: "3.1.0",
+  info: {
+    title: "Countify",
+    description: "The API for your dream Discord counting bot.",
+    version: "2.0.0",
+  },
+  servers: [
+    {
+      url: "https://api.countify.fun",
+    },
+  ],
+};
 
 export default (client: BotClient) => {
   const api = express().use(cors()).use(cookieParser()).use(express.json());
+
+  const openapiSpecification = swaggerJsDoc({
+    swaggerDefinition,
+    apis: ["./src/features/server.ts"],
+  });
+
+  api.get("/openapi.json", (_, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(openapiSpecification);
+  });
 
   api.get("/", (_, res) =>
     res.redirect("https://docs.countify.fun/api-reference")
@@ -209,6 +234,31 @@ export default (client: BotClient) => {
     });
   });
 
+  /**
+   * @openapi
+   * /servers:
+   *    get:
+   *      description: "Retrive a list of servers sorted by highest count."
+   *      responses:
+   *        200:
+   *          description: "Successfully retrived servers."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: array
+   *                items:
+   *                  type: object
+   *                  properties:
+   *                    id:
+   *                      type: string
+   *                    name:
+   *                      type: string
+   *                    avatar:
+   *                      type: string
+   *                      nullable: true
+   *                    count:
+   *                      type: number
+   */
   api.get("/servers", (_, res) => {
     const servers = db.guilds
       .keyArray()
@@ -229,6 +279,67 @@ export default (client: BotClient) => {
     res.json(servers);
   });
 
+  /**
+   * @openapi
+   * "/servers/{id}":
+   *    get:
+   *      description: "Retrive information about the specified server ID."
+   *      parameters:
+   *        - name: id
+   *          in: path
+   *          required: true
+   *          schema:
+   *            type: string
+   *            description: "A server ID."
+   *          example: "977485367294959627"
+   *      responses:
+   *        200:
+   *          description: "Successfully retrived server."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: object
+   *                properties:
+   *                  id:
+   *                    type: string
+   *                  name:
+   *                    type: string
+   *                  avatar:
+   *                    type: string
+   *                    nullable: true
+   *                  count:
+   *                    type: number
+   *                  previousUser:
+   *                    type: object
+   *                    properties:
+   *                      id:
+   *                        type: string
+   *                      name:
+   *                        type: string
+   *                      username:
+   *                        type: string
+   *                      avatar:
+   *                        type: string
+   *                      counts:
+   *                        type: number
+   *                      fails:
+   *                        type: number
+   *        404:
+   *          description: "Server not found or does not have the counting system enabled."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: object
+   *                properties:
+   *                  error:
+   *                    type: object
+   *                    properties:
+   *                      code:
+   *                        type: number
+   *                        default: 404
+   *                      message:
+   *                        type: string
+   */
   api.get("/servers/:id", (req, res) => {
     const { id } = req.params;
 
@@ -275,6 +386,51 @@ export default (client: BotClient) => {
     });
   });
 
+  /**
+   * @openapi
+   * "/servers/{id}/history":
+   *    get:
+   *      description: "Retrive the count history the specified server ID."
+   *      parameters:
+   *        - name: id
+   *          in: path
+   *          required: true
+   *          schema:
+   *            type: string
+   *            description: "A server ID."
+   *          example: "977485367294959627"
+   *      responses:
+   *        200:
+   *          description: "Successfully retrived server history."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: array
+   *                items:
+   *                  type: object
+   *                  properties:
+   *                    time:
+   *                      type: integer
+   *                      format: int64
+   *                      minimum: 1
+   *                    count:
+   *                      type: number
+   *        404:
+   *          description: "Server not found or does not have the counting system enabled."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: object
+   *                properties:
+   *                  error:
+   *                    type: object
+   *                    properties:
+   *                      code:
+   *                        type: number
+   *                        default: 404
+   *                      message:
+   *                        type: string
+   */
   api.get("/servers/:id/history", (req, res) => {
     const { id } = req.params;
 
@@ -303,6 +459,117 @@ export default (client: BotClient) => {
     res.redirect(`/servers/${req.params.id}`)
   );
 
+  /**
+   * @openapi
+   * "/servers/{id}/users":
+   *    get:
+   *      description: "Retrive a paginated list of all the users from the specified server ID."
+   *      parameters:
+   *        - name: id
+   *          in: path
+   *          required: true
+   *          schema:
+   *            type: string
+   *            description: "A server ID."
+   *          example: "977485367294959627"
+   *        - name: sort
+   *          in: query
+   *          required: false
+   *          schema:
+   *            type: string
+   *            enum: ["counts", "fails", "cf_ratio"]
+   *            default: "cf_ratio"
+   *          description: "A sort type."
+   *        - name: page
+   *          in: query
+   *          required: false
+   *          schema:
+   *            type: number
+   *            default: 1
+   *          description: "The page to view."
+   *      responses:
+   *        200:
+   *          description: "Successfully retrived server history."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: object
+   *                properties:
+   *                  users:
+   *                    type: array
+   *                    items:
+   *                      type: object
+   *                      properties:
+   *                        id:
+   *                          type: string
+   *                        name:
+   *                          type: string
+   *                        username:
+   *                          type: string
+   *                        avatar:
+   *                          type: string
+   *                        counts:
+   *                          type: number
+   *                        fails:
+   *                          type: number
+   *                  totalPages:
+   *                    type: number
+   *                    default: 1
+   *        404:
+   *          description: "Server not found or does not have the counting system enabled."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: object
+   *                properties:
+   *                  error:
+   *                    type: object
+   *                    properties:
+   *                      code:
+   *                        type: number
+   *                        default: 404
+   *                      message:
+   *                        type: string
+   *        401:
+   *          description: "Invalid parameters specified."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: array
+   *                items:
+   *                  type: object
+   *                  properties:
+   *                    type:
+   *                      type: string
+   *                    errors:
+   *                      type: object
+   *                      properties:
+   *                        issues:
+   *                          type: array
+   *                          items:
+   *                            type: object
+   *                            properties:
+   *                              code:
+   *                                type: string
+   *                              expected:
+   *                                type: string
+   *                                nullable: true
+   *                              recieved:
+   *                                type: string
+   *                              options:
+   *                                type: array
+   *                                items:
+   *                                  type: string
+   *                                nullable: true
+   *                              path:
+   *                                type: array
+   *                                items:
+   *                                  type: string
+   *                              message:
+   *                                type: string
+   *                        name:
+   *                          type: string
+   */
   api.get(
     "/servers/:id/users",
     validateRequest({
@@ -369,6 +636,77 @@ export default (client: BotClient) => {
     }
   );
 
+  /**
+   * @openapi
+   * "/servers/{serverId}/users/{userId}":
+   *    get:
+   *      description: "Retrive information about the specified user ID from the specified server ID."
+   *      parameters:
+   *        - name: serverId
+   *          in: path
+   *          required: true
+   *          schema:
+   *            type: string
+   *            description: "A server ID."
+   *          example: "977485367294959627"
+   *        - name: userId
+   *          in: path
+   *          required: true
+   *          schema:
+   *            type: string
+   *            description: "A user ID."
+   *          example: "955408387905048637"
+   *      responses:
+   *        200:
+   *          description: "Successfully retrived user."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: object
+   *                properties:
+   *                  server:
+   *                    type: object
+   *                    properties:
+   *                      id:
+   *                        type: string
+   *                      name:
+   *                        type: string
+   *                      avatar:
+   *                        type: string
+   *                        nullable: true
+   *                      count:
+   *                        type: number
+   *                  user:
+   *                    type: object
+   *                    properties:
+   *                      id:
+   *                        type: string
+   *                      name:
+   *                        type: string
+   *                      username:
+   *                        type: string
+   *                      avatar:
+   *                        type: string
+   *                  counts:
+   *                    type: number
+   *                  fails:
+   *                    type: number
+   *        404:
+   *          description: "Server or user not found or the server does not have the counting system enabled."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: object
+   *                properties:
+   *                  error:
+   *                    type: object
+   *                    properties:
+   *                      code:
+   *                        type: number
+   *                        default: 404
+   *                      message:
+   *                        type: string
+   */
   api.get("/servers/:id/users/:userId", (req, res) => {
     const { id, userId } = req.params;
 
@@ -418,6 +756,55 @@ export default (client: BotClient) => {
     });
   });
 
+  /**
+   * @openapi
+   * "/users/{id}":
+   *    get:
+   *      description: "Retrive information about the specified user ID."
+   *      parameters:
+   *        - name: id
+   *          in: path
+   *          required: true
+   *          schema:
+   *            type: string
+   *            description: "A user ID."
+   *          example: "955408387905048637"
+   *      responses:
+   *        200:
+   *          description: "Successfully retrived user."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: object
+   *                properties:
+   *                  id:
+   *                    type: string
+   *                  name:
+   *                    type: string
+   *                  username:
+   *                    type: string
+   *                  avatar:
+   *                    type: string
+   *                  counts:
+   *                    type: number
+   *                  fails:
+   *                    type: number
+   *        404:
+   *          description: "User not found."
+   *          content:
+   *            application/json:
+   *              schema:
+   *                type: object
+   *                properties:
+   *                  error:
+   *                    type: object
+   *                    properties:
+   *                      code:
+   *                        type: number
+   *                        default: 404
+   *                      message:
+   *                        type: string
+   */
   api.get("/users/:id", (req, res) => {
     const { id } = req.params;
 
