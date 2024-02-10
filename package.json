@@ -14,6 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "@top-gg/sdk": "^3.1.6",
+    "@types/swagger-jsdoc": "^6.0.4",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "cron": "^3.1.6",
@@ -23,6 +24,7 @@
     "express": "^4.18.2",
     "lodash": "^4.17.21",
     "next-auth": "^4.24.5",
+    "swagger-jsdoc": "^6.2.8",
     "yaml": "^2.3.4",
     "zod": "^3.22.4",
     "zod-express-middleware": "^1.4.0"
